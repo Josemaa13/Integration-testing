@@ -24,7 +24,7 @@ Docs:
 - Swagger UI: `GET /api/schema/swagger-ui/`
 - OpenAPI JSON: `GET /api/schema/`
 
-## Quick start (Docker)
+## Quick start (Docker) Take care with the wifi
 1) Create `.env` (you can copy from `.env.example`):
 
 ```bash
