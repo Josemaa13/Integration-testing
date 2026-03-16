@@ -40,10 +40,6 @@ class InvoiceIntegrationTests(APITestCase):
         }
 
         response = self.client.post(url, payload, format="json")
-
-        print("\n--- RESPUESTA DE LA API ---")
-        print(response.data)
-        print("---------------------------\n")
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
@@ -51,3 +47,38 @@ class InvoiceIntegrationTests(APITestCase):
 
         barrel_b.refresh_from_db()
         self.assertFalse(barrel_b.billed)
+        
+        
+    def test_provider_scoping_for_invoices(self):
+        provider_a = Provider.objects.create(name="Provider A")
+        provider_b = Provider.objects.create(name="Provider B")
+
+        user_a = User.objects.create_user(
+            username="user_a2", 
+            password="password123", 
+            provider=provider_a
+        )
+        self.client.force_authenticate(user=user_a)
+
+        invoice_a = Invoice.objects.create(
+            provider=provider_a, 
+            invoice_no="INV-001", 
+            issued_on="2024-01-01"
+        )
+        
+        invoice_b = Invoice.objects.create(
+            provider=provider_b, 
+            invoice_no="INV-002", 
+            issued_on="2024-02-01"
+        )
+        
+        response_list = self.client.get("/api/invoices/")
+        
+        self.assertEqual(response_list.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response_list.data), 1)
+        self.assertEqual(response_list.data[0]["id"], invoice_a.id)
+
+
+        response_detail = self.client.get(f"/api/invoices/{invoice_b.id}/")
+        
+        self.assertEqual(response_detail.status_code, status.HTTP_404_NOT_FOUND)
