@@ -1,7 +1,8 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from billing.models import Provider, Barrel
+from billing.models import Provider, Barrel, InvoiceLine, Invoice
+
 
 User = get_user_model()
 
@@ -42,3 +43,26 @@ class BarrelIntegrationTests(APITestCase):
         
         
         self.assertNotEqual(created_barrel.provider_id, provider_b.id)
+        
+    def test_cannot_delete_billed_barrel(self):
+        provider = Provider.objects.create(name="Provider A")
+        
+        user = User.objects.create_user(username="user_delete", password="pw", provider=provider)
+        self.client.force_authenticate(user=user)
+        
+        invoice = Invoice.objects.create(provider=provider, issued_on="2024-01-01", invoice_no="INV-DEL")
+        barrel = Barrel.objects.create(provider=provider, number="B-DEL", oil_type="Olive", liters=100, billed=True)
+
+        InvoiceLine.objects.create(
+            invoice=invoice,
+            barrel=barrel,
+            liters=100,
+            unit_price=5.0,
+            description="Test"
+        )
+
+        response = self.client.delete(f"/api/barrels/{barrel.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        self.assertTrue(Barrel.objects.filter(id=barrel.id).exists())

@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import ProtectedError
 
 from ..models import Provider, Barrel, Invoice
 from .serializers import (
@@ -58,6 +59,15 @@ class BarrelViewSet(viewsets.ModelViewSet):
         if user.provider_id is None:
             raise PermissionDenied("User is not linked to any provider.")
         serializer.save(provider_id=user.provider_id)
+    
+    def perform_destroy(self, instance):
+        try:
+            super().perform_destroy(instance)
+        except ProtectedError:
+            # Devuelve 400 Bad request
+            raise serializers.ValidationError({
+                "detail": "Cannot delete this barrel because it is already billed in an invoice."
+            })
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
