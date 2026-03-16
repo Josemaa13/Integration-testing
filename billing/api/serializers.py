@@ -58,6 +58,19 @@ class InvoiceLineCreateSerializer(serializers.ModelSerializer):
         model = InvoiceLine
         fields = ["unit_price", "barrel", "liters", "description"]
 
+
+    def validate(self, attrs):
+        barrel = attrs.get('barrel')
+        invoice = self.context.get('invoice')
+
+        if barrel and invoice and barrel.provider_id != invoice.provider_id:
+            raise serializers.ValidationError({
+                'barrel': 'Barrel provider must match invoice provider.'
+            })
+            
+        return attrs
+
+
     def create(self, validated_data: dict) -> InvoiceLine:
         invoice = self.context["invoice"]
         return invoice.add_line_for_barrel(

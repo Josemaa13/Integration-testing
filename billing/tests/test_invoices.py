@@ -33,14 +33,17 @@ class InvoiceIntegrationTests(APITestCase):
         
       
         payload = {
-            "barrel_id": barrel_b.id,
-            "liters": 100,
-            "unit_price_per_liter": 5.50
+            "barrel": barrel_b.id,
+            "unit_price": 5.50,
+            "description": "Línea de prueba para el barril",
+            "liters": 100 
         }
 
         response = self.client.post(url, payload, format="json")
 
-
+        print("\n--- RESPUESTA DE LA API ---")
+        print(response.data)
+        print("---------------------------\n")
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
