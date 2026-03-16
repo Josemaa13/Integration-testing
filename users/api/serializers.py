@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id",
+            "id",   
             "username",
             "first_name",
             "last_name",
@@ -56,19 +56,21 @@ class SignupSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
 
-    def validate_first_name(self, value):
-        if value == None or value == "":
-            raise serializers.ValidationError('First name is required')
-        return value
-    
     def validate(self, attrs):
-        first_name = attrs.get('first_name', None)
-        if first_name == None or first_name == "":
-            raise serializers.ValidationError({
-                'first_name': 'First name is required.'
-            })
-        return attrs
+        errors = {}
 
+        first_name = attrs.get('first_name', '')
+        if not first_name:
+            errors['first_name'] = 'First name is required.'
+
+        last_name = attrs.get('last_name', '')
+        if not last_name:
+            errors['last_name'] = 'Last name is required.'
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -76,3 +78,4 @@ class SignupSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+ 
