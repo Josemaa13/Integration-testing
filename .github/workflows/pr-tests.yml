@@ -9,6 +9,7 @@ on:
 
 jobs:
   test:
+    name: PR Tests
     runs-on: ubuntu-latest
 
     services:
