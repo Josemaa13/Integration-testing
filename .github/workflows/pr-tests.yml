@@ -6,8 +6,10 @@ on:
       - main
       - master
 
+
 jobs:
   test:
+    name: PR Tests
     runs-on: ubuntu-latest
 
     services:
@@ -33,6 +35,7 @@ jobs:
       POSTGRES_PASSWORD: billing_pass
       POSTGRES_HOST: localhost
       POSTGRES_PORT: "5432"
+
 
     steps:
       - name: Checkout
